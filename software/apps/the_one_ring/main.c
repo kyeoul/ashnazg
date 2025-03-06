@@ -21,13 +21,28 @@ APP_TIMER_DEF(sample_timer);
 // Global variables
 NRF_TWI_MNGR_DEF(twi_mngr_instance, 1, 0);
 
+bool interrupt_table[64] = {0};
+
 static void distance_timer_callback(void* __unused){
   printf("measuring distance: %f\n", distance_measure_blocking());
 }
 
 static void sample_timer_callback(void* __unused){
   printf("sampling\n");
-  printf("echo output: %d\n", read_echo_output());
+  // print_temp_array();
+  if(interrupt_flag_set()){
+    printf("interrupt flag set\n");
+    for(int i = 0; i < 64; i++){
+      interrupt_table[i] = pixel_interrupt_set(i);
+    }
+    for(int i = 0; i < 8; i++){
+      for(int j = 0; j < 8; j++){
+        printf("%d ", interrupt_table[i*8 + j]);
+      }
+      printf("\n");
+    }
+    clear_interrupt_flag();
+  }
 }
 
 int main(void){
@@ -47,6 +62,11 @@ int main(void){
   distance_sensor_init();
   ir_array_init(&twi_mngr_instance);
 
+  set_interrupt_mode_absolute();
+  set_upper_interrupt_value(50);
+  set_lower_interrupt_value(0);
+  set_hysteresis_interrupt_value(5);
+
   // initialize app timers
   app_timer_init();
   app_timer_create(&sample_timer, APP_TIMER_MODE_REPEATED, sample_timer_callback);
@@ -58,10 +78,6 @@ int main(void){
   app_timer_start(distance_timer, 163840, NULL);
 
   printf("sup lol\n");
-
-  for(int i = 0; i < 64; i++){
-    printf("pixel %d: %f\n", i, get_pixel_temperature(i));
-  }
 
   while (1) {
     // Don't put any code in here. Instead put periodic code in `sample_timer_callback()`

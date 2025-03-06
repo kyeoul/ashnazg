@@ -50,3 +50,5 @@ bool get_register_16(uint8_t reg, uint16_t* value);
 bool get_register_8(uint8_t reg, uint8_t* value);
 
 bool set_register(uint8_t reg, uint8_t value);
+
+void print_temp_array();

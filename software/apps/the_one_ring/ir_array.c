@@ -17,19 +17,32 @@ float get_pixel_temperature(uint8_t pixel) {
 }
 
 void set_interrupt_mode_absolute() {
-
+  uint8_t value = 0;
+  if(get_register_8(INT_CONTROL_REGISTER, &value)){
+    value |= (1 << 1);
+    set_register(INT_CONTROL_REGISTER, value);
+  }
 }
 
 void set_upper_interrupt_value(uint16_t value) {
-
+  uint8_t upper_lsb = value & 0xFF;
+  uint8_t upper_msb = (value >> 8) & 0xFF;
+  set_register(INT_LEVEL_REGISTER_UPPER_LSB, upper_lsb);
+  set_register(INT_LEVEL_REGISTER_UPPER_MSB, upper_msb);
 }
 
 void set_lower_interrupt_value(uint16_t value) {
-
+  uint8_t lower_lsb = value & 0xFF;
+  uint8_t lower_msb = (value >> 8) & 0xFF;
+  set_register(INT_LEVEL_REGISTER_LOWER_LSB, lower_lsb);
+  set_register(INT_LEVEL_REGISTER_LOWER_MSB, lower_msb);
 }
 
 void set_hysteresis_interrupt_value(uint16_t value) {
-
+  uint8_t hysteresis_lsb = value & 0xFF;
+  uint8_t hysteresis_msb = (value >> 8) & 0xFF;
+  set_register(INT_LEVEL_REGISTER_HYST_LSB, hysteresis_lsb);
+  set_register(INT_LEVEL_REGISTER_HYST_MSB, hysteresis_msb);
 }
 
 bool interrupt_flag_set() {
@@ -41,7 +54,8 @@ bool pixel_interrupt_set(uint8_t pixel) {
 }
 
 void clear_interrupt_flag() {
-
+  uint8_t value = 0x02;
+  set_register(STATUS_CLEAR_REGISTER, value);
 }
 
 bool get_register_16(uint8_t reg, uint16_t* value) {
@@ -108,4 +122,13 @@ bool set_register(uint8_t reg, uint8_t value) {
   }
 
   return true;
+}
+
+void print_temp_array() {
+  for(int i = 0; i < 8; i++){
+    for(int j = 0; j < 8; j++){
+      printf("%f ", get_pixel_temperature(i*8 + j));
+    }
+    printf("\n");
+  }
 }
