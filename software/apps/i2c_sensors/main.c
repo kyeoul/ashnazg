@@ -12,9 +12,23 @@
 
 #include "microbit_v2.h"
 #include "lsm303agr.h"
+#include "app_timer.h"
+
+APP_TIMER_DEF(w);
 
 // Global variables
 NRF_TWI_MNGR_DEF(twi_mngr_instance, 1, 0);
+
+void print_temperature() {
+  lsm303agr_measurement_t acceleration = lsm303agr_read_accelerometer();
+  lsm303agr_measurement_t magnetometer = lsm303agr_read_magnetometer();
+
+  printf("Acceleration: x=%f, y=%f, z=%f\n", acceleration.x_axis, acceleration.y_axis, acceleration.z_axis); 
+  printf("Magnetometer: x=%f, y=%f, z=%f\n", magnetometer.x_axis, magnetometer.y_axis, magnetometer.z_axis);
+
+  lsm303agr_measurement_t tilt = calculate_tilt_angle_from_acceleration(acceleration);
+  printf("Tilt: x=%f, y=%f, z=%f\n", tilt.x_axis, tilt.y_axis, tilt.z_axis);
+}
 
 int main(void) {
   printf("Board started!\n");
@@ -35,6 +49,10 @@ int main(void) {
   lsm303agr_init(&twi_mngr_instance);
 
   //TODO: implement me!
+  app_timer_init();
+  app_timer_create(&w, APP_TIMER_MODE_REPEATED, print_temperature);
+
+  app_timer_start(w, 32768, NULL);
 
   // Loop forever
   while (1) {
