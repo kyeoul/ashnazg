@@ -17,20 +17,31 @@
 
 // High-speed timer for timeout detection
 static nrfx_timer_t TIMER4 = NRFX_TIMER_INSTANCE(0);
+static nrfx_timer_t TIMER5 = NRFX_TIMER_INSTANCE(1);
 
 // Status of the touch sensor
 static bool touch_active = false;
 
+static void disable_interrupts() {
+  nrfx_timer_pause(&TIMER4);
+  nrfx_gpiote_in_event_disable(TOUCH_LOGO);
+}
+
 // Callback function for GPIO interrupts
 static void gpio_handler(nrfx_gpiote_pin_t pin, nrf_gpiote_polarity_t action) {
   // Disable the GPIO interrupt event so you don't get multiple spurious events
-  nrfx_gpiote_in_event_disable(TOUCH_LOGO);
+  disable_interrupts();
 
   // Implement me first!
+  uint32_t count = nrfx_timer_capture(&TIMER4, NRF_TIMER_CC_CHANNEL0);
+
+  touch_active = false;
 }
 
 static void timer_handler(nrf_timer_event_t event, void* context) {
-  // Implement in a later step
+  disable_interrupts();
+
+  touch_active = true;
 }
 
 // Helper function for starting a test
@@ -54,6 +65,15 @@ static void start_capacitive_test(void) {
   nrfx_gpiote_in_event_enable(TOUCH_LOGO, true); // enable interrupts
 }
 
+static void loop(nrf_timer_event_t event, void* context) {
+  disable_interrupts();
+
+  nrfx_timer_clear(&TIMER5);
+  nrfx_timer_resume(&TIMER5);
+
+  start_capacitive_test();
+}
+
 
 // Starts continuously measuring capacitive touch for the logo
 // Function returns immediately without blocking
@@ -67,11 +87,27 @@ void capacitive_touch_init(void) {
     .interrupt_priority = 4,
     .p_context = NULL
   };
+
+  nrfx_timer_config_t timer_config2 = {
+    .frequency = NRF_TIMER_FREQ_1MHz,
+    .mode = NRF_TIMER_MODE_TIMER,
+    .bit_width = NRF_TIMER_BIT_WIDTH_32,
+    .interrupt_priority = 4,
+    .p_context = NULL
+  };
+
   nrfx_timer_init(&TIMER4, &timer_config, timer_handler);
+  nrfx_timer_init(&TIMER5, &timer_config2, loop);
 
   // enable, but pause the timer
   nrfx_timer_enable(&TIMER4);
   nrfx_timer_pause(&TIMER4);
+
+  nrfx_timer_enable(&TIMER5);
+  nrfx_timer_resume(&TIMER5);
+
+  nrfx_timer_compare(&TIMER4, NRF_TIMER_CC_CHANNEL1, 300, true);
+  nrfx_timer_compare(&TIMER5, NRF_TIMER_CC_CHANNEL1, 100000, true);
 
   // start the touch test
   start_capacitive_test();
