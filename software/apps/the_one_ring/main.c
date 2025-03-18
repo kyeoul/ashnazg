@@ -18,7 +18,7 @@
 #include "ir_array.h"
 #include "i2c.h"
 #include "temp_sensor.h"
-// #include "capacitive_touch.h"
+#include "capacitive_touch.h"
 
 #define IR_LED_PIN EDGE_P0
 #define VOLTAGE_MEASURE_CHANNEL NRF_SAADC_INPUT_AIN4
@@ -163,7 +163,7 @@ int main(void)
   // app_timer_start(distance_timer, 163840, NULL);
 
   printf("sup lol\n");
-  // capacitive_touch_init();
+  capacitive_touch_init();
   ir_led_init();
   adc_init();
   while (1)
@@ -187,6 +187,6 @@ int main(void)
     // printf("Capacitive Touch Active: %d\n", capacitive_touch_is_active());
 
     nrf_delay_ms(1000);
-    // printf("%d\n", capacitive_touch_is_active());
+    printf("%d\n", capacitive_touch_is_active());
   }
 }
