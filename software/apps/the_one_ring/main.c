@@ -13,6 +13,7 @@
 
 #include "microbit_v2.h"
 #include "distance_sensor.h"
+#include "pwm.h"
 #include "servo.h"
 #include "ir_array.h"
 
@@ -68,13 +69,14 @@ int main(void){
   // set_upper_interrupt_value(50);
   // set_lower_interrupt_value(0);
   // set_hysteresis_interrupt_value(5);
+  app_timer_init();
+  pwm_init();
 
   servo_init();
 
-  servo_rotate();
 
   // // initialize app timers
-  // app_timer_init();
+  
   // app_timer_create(&sample_timer, APP_TIMER_MODE_REPEATED, sample_timer_callback);
   // app_timer_create(&distance_timer, APP_TIMER_MODE_REPEATED, distance_timer_callback);
 
@@ -87,7 +89,6 @@ int main(void){
 
   while (1) {
     // Don't put any code in here. Instead put periodic code in `sample_timer_callback()`
-    
     nrf_delay_ms(1000);
   }
 }
