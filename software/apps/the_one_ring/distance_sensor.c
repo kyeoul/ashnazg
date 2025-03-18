@@ -1,11 +1,14 @@
-#include <stdint.h>
-#include <microbit_v2.h>
+#include "app_timer.h"
 #include "nrf_delay.h"
+#include "nrf_gpio.h"
+#include "nrfx_gpiote.h"
 #include "nrfx_timer.h"
+
+#include "microbit_v2.h"
 
 #include "distance_sensor.h"
 
-static nrfx_timer_t DISTANCE_TIMER = NRFX_TIMER_INSTANCE(0);
+static nrfx_timer_t DISTANCE_TIMER = NRFX_TIMER_INSTANCE(2);
 
 static void timer_handler(nrf_timer_event_t event, void* context) {
   printf("hi lol\n");
@@ -30,14 +33,6 @@ void distance_sensor_init(){
 }
 
 float distance_measure_blocking(){
-  // start_sensor();
-  // while(read_echo_output() == 0);
-  // uint32_t start_time = app_timer_cnt_get();
-  // while(read_echo_output() == 1);
-  // uint32_t end_time = app_timer_cnt_get();
-  // uint32_t time_diff = end_time - start_time;
-  // float distance = (time_diff * 0.0343) / 2;
-  // return distance;
 
   start_sensor();
   while(read_echo_output() == 0);

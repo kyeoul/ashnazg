@@ -1,3 +1,5 @@
+#include <stdint.h>
+
 #define TRIG_OUTPUT EDGE_P3
 #define ECHO_INPUT EDGE_P4
 
