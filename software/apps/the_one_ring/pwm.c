@@ -10,7 +10,7 @@ void pwm_init() {
     .irq_priority = 0,
     .base_clock = NRF_PWM_CLK_1MHz,
     .count_mode = NRF_PWM_MODE_UP,
-    .top_value = 4000,
+    .top_value = 2000,
     .load_mode = NRF_PWM_LOAD_COMMON,
     .step_mode = NRF_PWM_STEP_AUTO
   };
@@ -18,9 +18,9 @@ void pwm_init() {
   nrfx_pwm_config_t speaker_config = {
     .output_pins = {RING_SPEAKER_OUT, NRFX_PWM_PIN_NOT_USED, NRFX_PWM_PIN_NOT_USED, NRFX_PWM_PIN_NOT_USED},
     .irq_priority = 0,
-    .base_clock = NRF_PWM_CLK_1MHz,
+    .base_clock = NRF_PWM_CLK_2MHz,
     .count_mode = NRF_PWM_MODE_UP,
-    .top_value = 4000,
+    .top_value = PWM_TOP_VALUE,
     .load_mode = NRF_PWM_LOAD_COMMON,
     .step_mode = NRF_PWM_STEP_AUTO
   };
@@ -42,4 +42,10 @@ void pwm_write(nrfx_pwm_t instance, uint16_t duty_cycle) {
   };
 
   nrfx_pwm_simple_playback(&instance, &pwm_sequence, 1, NRFX_PWM_FLAG_LOOP);
+};
+
+void pwm_write_sequence(nrfx_pwm_t instance, nrf_pwm_sequence_t sequence) {
+  nrfx_pwm_stop(&instance, true);
+
+  nrfx_pwm_simple_playback(&instance, &sequence, 1, NRFX_PWM_FLAG_STOP);
 };
