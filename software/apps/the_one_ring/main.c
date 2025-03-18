@@ -18,8 +18,10 @@
 #include "ir_array.h"
 #include "i2c.h"
 #include "temp_sensor.h"
-#include "capacitive_touch.h"
+// #include "capacitive_touch.h"
 
+#define IR_LED_PIN EDGE_P0
+#define VOLTAGE_MEASURE_CHANNEL NRF_SAADC_INPUT_AIN4
 APP_TIMER_DEF(distance_timer);
 APP_TIMER_DEF(sample_timer);
 
@@ -27,12 +29,78 @@ APP_TIMER_DEF(sample_timer);
 NRF_TWI_MNGR_DEF(twi_mngr_instance, 1, 0);
 
 bool interrupt_table[64] = {0};
+static void saadc_event_handler(nrfx_saadc_evt_t const *p_evt);
+void ir_led_init(void)
+{
+  nrfx_gpiote_out_config_t out_config = NRFX_GPIOTE_CONFIG_OUT_SIMPLE(false);
+  nrfx_gpiote_out_init(IR_LED_PIN, &out_config);
+}
 
-static void distance_timer_callback(void* __unused){
+void ir_led_on(void)
+{
+  nrfx_gpiote_out_set(IR_LED_PIN);
+}
+
+void ir_led_off(void)
+{
+  nrfx_gpiote_out_clear(IR_LED_PIN);
+}
+
+void ir_led_toggle(void)
+{
+  nrfx_gpiote_out_toggle(IR_LED_PIN);
+}
+
+static void adc_init(void)
+{
+  // 1. Create a default SAADC config
+  nrfx_saadc_config_t saadc_config = {
+      .resolution = NRF_SAADC_RESOLUTION_12BIT,
+      .oversample = NRF_SAADC_OVERSAMPLE_DISABLED,
+      .interrupt_priority = 4,
+      .low_power_mode = false,
+  }; // 2. Initialize SAADC (no event handler, we'll do blocking calls)
+  nrfx_err_t err = nrfx_saadc_init(&saadc_config, saadc_event_handler);
+  if (err != NRFX_SUCCESS)
+  {
+    printf("SAADC init error: %lu\n", err);
+  }
+
+  // 3. Configure an SAADC channel for single-ended reads on AIN1
+  nrf_saadc_channel_config_t channel_config =
+      NRFX_SAADC_DEFAULT_CHANNEL_CONFIG_SE(VOLTAGE_MEASURE_CHANNEL);
+
+  // 4. Initialize that channel at index 0
+  err = nrfx_saadc_channel_init(0, &channel_config);
+  if (err != NRFX_SUCCESS)
+  {
+    printf("SAADC channel init error: %lu\n", err);
+  }
+}
+
+static float read_voltage(void)
+{
+  nrf_saadc_value_t adc_value = 0;
+  // Perform a blocking sample on channel 0
+  nrfx_err_t err = nrfx_saadc_sample_convert(0, &adc_value);
+  if (err != NRFX_SUCCESS)
+  {
+    printf("SAADC sample error: %lu\n", err);
+    return 0.0f;
+  }
+
+  // Convert 10-bit reading (0..1023) to voltage (assuming ~3.3 V reference)
+  float voltage = (adc_value * 3.3f) / 1023.0f;
+  return voltage;
+}
+
+static void distance_timer_callback(void *__unused)
+{
   printf("measuring distance: %f\n", distance_measure_blocking());
 }
 
-static void sample_timer_callback(void* __unused){
+static void sample_timer_callback(void *__unused)
+{
   printf("sampling\n");
   printf("temp: %f\n", read_temp_C());
   // print_temp_array();
@@ -51,7 +119,14 @@ static void sample_timer_callback(void* __unused){
   // }
 }
 
-int main(void){
+static void saadc_event_handler(nrfx_saadc_evt_t const *_unused)
+{
+  // don't care about saadc events
+  // ignore this function
+}
+
+int main(void)
+{
 
   // distance_sensor_init();
   // Initialize I2C peripheral and driver
@@ -88,12 +163,30 @@ int main(void){
   // app_timer_start(distance_timer, 163840, NULL);
 
   printf("sup lol\n");
-  capacitive_touch_init();
+  // capacitive_touch_init();
+  ir_led_init();
+  adc_init();
+  while (1)
+  {
+    // Turn IR LED ON
+    ir_led_on();
+    nrf_delay_ms(500);
 
-  while (1) {
-    // Don't put any code in here. Instead put periodic code in `sample_timer_callback()`
-    
+    // Read voltage at P1
+    float voltage_on = read_voltage();
+    printf("IR LED ON - Measured Voltage: %.2f V\n", voltage_on);
+
+    // Turn IR LED OFF
+    ir_led_off();
+    nrf_delay_ms(500);
+
+    // Read voltage at P1 again
+    float voltage_off = read_voltage();
+    printf("IR LED OFF - Measured Voltage: %.2f V\n", voltage_off);
+
+    // printf("Capacitive Touch Active: %d\n", capacitive_touch_is_active());
+
     nrf_delay_ms(1000);
-    printf("%d\n", capacitive_touch_is_active());
+    // printf("%d\n", capacitive_touch_is_active());
   }
 }
