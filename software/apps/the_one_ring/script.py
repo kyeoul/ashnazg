@@ -4,7 +4,7 @@ import os
 raw_files = []
 raw_file_paths = [
     # 'cannothide.raw', 
-    # 'ashnazg.raw',
+    'ashnazg.raw',
     'go_other_way.raw', 
     'keep_walking.raw',
     'ring_command.raw',

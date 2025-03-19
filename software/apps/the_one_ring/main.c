@@ -24,6 +24,7 @@
 #define VOLTAGE_MEASURE_CHANNEL NRF_SAADC_INPUT_AIN1
 APP_TIMER_DEF(sample_timer);
 APP_TIMER_DEF(event_timer);
+APP_TIMER_DEF(reset_has_played_timer);
 
 // Global variables
 NRF_TWI_MNGR_DEF(twi_mngr_instance, 1, 0);
@@ -82,43 +83,60 @@ static float read_voltage(void)
 float past_distance = -1;
 float curr_distance = -1;
 
+bool has_played = false;
+
 static void sample_timer_callback(void *__unused)
 {
-  printf("sampling\n");
   printf("measuring distance: %f\n", distance_measure_blocking());
   if(curr_distance != -1) {
     past_distance = curr_distance;
   }
   curr_distance = distance_measure_blocking();
   printf("past distance: %f\n", past_distance);
+
+  if(has_played){
+    return;
+  }
+  else if(curr_distance != -1 && past_distance != -1) {
+    if(curr_distance < 1.2){
+      speaker_play(LERING_ACTIVATED);
+    }
+    else if(curr_distance - past_distance > 2) {
+      printf("distance increased by 10\n");
+      // play a sound
+      speaker_play(GO_OTHER_WAY);
+      nrf_delay_ms(1000);
+    }
+    else if(curr_distance - past_distance < -2) {
+      printf("distance decreased by 10\n");
+      // play a sound
+      speaker_play(KEEP_WALKING);
+      nrf_delay_ms(1000);
+    }
+  }
+}
+
+static void reset_has_played_callback(void *__unused)
+{
+  has_played = false;
 }
 
 static void event_timer_callback(void *__unused)
 {
   printf("event timer\n");
 
+  if(has_played){
+    return;
+  }
+
   if(read_temp_C() > 25){
     printf("temp is greater than 20\n");
     // play a sound
+    speaker_play(RING_COMMAND);
     nrf_delay_ms(1000);
   }
-  if(read_temp_C() < 10){
-    printf("temp is less than 10\n");
-    // play a sound
-    nrf_delay_ms(1000);
-  }
-  if(curr_distance != -1 && past_distance != -1) {
-    if(curr_distance - past_distance > 2) {
-      printf("distance increased by 10\n");
-      // play a sound
-      nrf_delay_ms(1000);
-    }
-    if(curr_distance - past_distance < -2) {
-      printf("distance decreased by 10\n");
-      // play a sound
-      nrf_delay_ms(1000);
-    }
-  }
+
+  has_played = true;
 }
 
 int main(void)
@@ -149,11 +167,13 @@ int main(void)
   app_timer_init();
   app_timer_create(&sample_timer, APP_TIMER_MODE_REPEATED, sample_timer_callback);
   app_timer_create(&event_timer, APP_TIMER_MODE_REPEATED, event_timer_callback);
+  app_timer_create(&reset_has_played_timer, APP_TIMER_MODE_REPEATED, reset_has_played_callback);
 
   // start timer
   // change the rate to whatever you want
   app_timer_start(sample_timer, 32768, NULL);
   app_timer_start(event_timer, 327680, NULL);
+  app_timer_start(reset_has_played_timer, 655360, NULL);
 
   printf("sup lol\n");
   capacitive_touch_init();
@@ -163,15 +183,13 @@ int main(void)
     // servo_rotate();
     nrf_delay_ms(100);
 
-    printf("Capacitive Touch Active: %d\n", capacitive_touch_is_active());
-
-    printf("temp: %f\n", read_temp_C());
-
     
-    if(capacitive_touch_is_active() == 1) {
+    if(capacitive_touch_is_active() == 1 && has_played == false) {
       printf("capacitive touch is active\n");
       // play a sound
+      speaker_play(ASHNAZG);
       nrf_delay_ms(1000);
+      has_played = true;
     }
   }
 }

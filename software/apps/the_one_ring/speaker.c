@@ -29,6 +29,9 @@ void speaker_play(file_name name)
     else if (name == LERING) {
       pcm_data = pcm_data_lering;
     }
+    else if (name == ASHNAZG) {
+      pcm_data = pcm_data_ashnazg;
+    }
     
     if (name != ASHNAZG)
     {
@@ -36,7 +39,7 @@ void speaker_play(file_name name)
     }
     else
     {
-      index = i * 2;
+      index = i;
     }
 
     sequence_data[i] = (uint16_t)(((pcm_data[index] + 32768) * PWM_TOP_VALUE) / 65535);
