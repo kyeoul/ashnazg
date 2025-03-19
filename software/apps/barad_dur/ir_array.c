@@ -60,3 +60,15 @@ void print_temp_array() {
     printf("\n");
   }
 }
+
+float get_average_temperature() {
+  float average_temp = 0;
+  for (int i = 0; i < 64; i++) {
+    float temp = get_pixel_temperature(i);
+    if (temp > 0) {
+      average_temp += temp;
+    }
+  }
+
+  return average_temp / 64;
+}
