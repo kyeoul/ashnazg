@@ -113,7 +113,7 @@ int main(void)
 
   // servo_write(50);
 
-  speaker_play(LERING_ACTIVATED);
+  speaker_play(LERING);
 
   // // initialize app timers
   nrfx_gpiote_init();

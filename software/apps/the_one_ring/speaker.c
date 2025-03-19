@@ -13,31 +13,23 @@ void speaker_play(file_name name)
   {
     int index;
     const int16_t *pcm_data;
-    if (name == CANNOT_HIDE)
-    {
-      pcm_data = pcm_data_cannothide;
-    }
-    else if (name == ASHNAZG)
-    {
-      pcm_data = pcm_data_ashnazg;
-    }
-    else if (name == LEBRON_GO_OTHER_WAY)
-    {
-      pcm_data = pcm_data_lebron_go_other_way;
-    }
-    else if (name == LEBRON_KEEP_WALKING)
-    {
-      pcm_data = pcm_data_lebron_keep_walking;
-    }
-    else if (name == LERING_ACTIVATED)
+    if (name == LERING_ACTIVATED)
     {
       pcm_data = pcm_data_lering_activated;
     }
-    else
-    {
+    else if (name == RING_COMMAND) {
+      pcm_data = pcm_data_ring_command;
+    }
+    else if (name == KEEP_WALKING) {
+      pcm_data = pcm_data_keep_walking;
+    }
+    else if (name == GO_OTHER_WAY) {
+      pcm_data = pcm_data_go_other_way;
+    }
+    else if (name == LERING) {
       pcm_data = pcm_data_lering;
     }
-
+    
     if (name != ASHNAZG)
     {
       index = i;
