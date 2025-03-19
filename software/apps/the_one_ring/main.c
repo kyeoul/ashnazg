@@ -22,8 +22,8 @@
 #include "ir_led.h"
 
 #define VOLTAGE_MEASURE_CHANNEL NRF_SAADC_INPUT_AIN1
-APP_TIMER_DEF(distance_timer);
 APP_TIMER_DEF(sample_timer);
+APP_TIMER_DEF(event_timer);
 
 // Global variables
 NRF_TWI_MNGR_DEF(twi_mngr_instance, 1, 0);
@@ -79,15 +79,46 @@ static float read_voltage(void)
   return voltage;
 }
 
-static void distance_timer_callback(void *__unused)
-{
-  printf("measuring distance: %f\n", distance_measure_blocking());
-}
+float past_distance = -1;
+float curr_distance = -1;
 
 static void sample_timer_callback(void *__unused)
 {
   printf("sampling\n");
-  printf("temp: %f\n", read_temp_C());
+  printf("measuring distance: %f\n", distance_measure_blocking());
+  if(curr_distance != -1) {
+    past_distance = curr_distance;
+  }
+  curr_distance = distance_measure_blocking();
+  printf("past distance: %f\n", past_distance);
+}
+
+static void event_timer_callback(void *__unused)
+{
+  printf("event timer\n");
+
+  if(read_temp_C() > 25){
+    printf("temp is greater than 20\n");
+    // play a sound
+    nrf_delay_ms(1000);
+  }
+  if(read_temp_C() < 10){
+    printf("temp is less than 10\n");
+    // play a sound
+    nrf_delay_ms(1000);
+  }
+  if(curr_distance != -1 && past_distance != -1) {
+    if(curr_distance - past_distance > 2) {
+      printf("distance increased by 10\n");
+      // play a sound
+      nrf_delay_ms(1000);
+    }
+    if(curr_distance - past_distance < -2) {
+      printf("distance decreased by 10\n");
+      // play a sound
+      nrf_delay_ms(1000);
+    }
+  }
 }
 
 int main(void)
@@ -101,12 +132,9 @@ int main(void)
   i2c_config.interrupt_priority = 0;
   nrf_twi_mngr_init(&twi_mngr_instance, &i2c_config);
 
-  // distance_sensor_init();
-
-  // // initialize i2c client
+  // initialize i2c client
   i2c_init(&twi_mngr_instance);
 
-  // app_timer_init();
   pwm_init();
 
   // servo_init();
@@ -115,49 +143,35 @@ int main(void)
 
   speaker_play(LERING);
 
-  // // initialize app timers
+  // initialize app timers
   nrfx_gpiote_init();
 
   app_timer_init();
   app_timer_create(&sample_timer, APP_TIMER_MODE_REPEATED, sample_timer_callback);
-  app_timer_create(&distance_timer, APP_TIMER_MODE_REPEATED, distance_timer_callback);
+  app_timer_create(&event_timer, APP_TIMER_MODE_REPEATED, event_timer_callback);
 
   // start timer
   // change the rate to whatever you want
-  // app_timer_start(sample_timer, 32768, NULL);
-  // app_timer_start(distance_timer, 163840, NULL);
+  app_timer_start(sample_timer, 32768, NULL);
+  app_timer_start(event_timer, 327680, NULL);
 
   printf("sup lol\n");
-  // capacitive_touch_init();
-  ir_led_init();
+  capacitive_touch_init();
   adc_init();
   while (1)
   {
     // servo_rotate();
     nrf_delay_ms(100);
 
-    // print_temp_array();
-    // Turn IR LED ON
-    ir_led_on();
-    nrf_delay_ms(100);
+    printf("Capacitive Touch Active: %d\n", capacitive_touch_is_active());
 
-    // // Read voltage at P1
-    float voltage_on = read_voltage();
-    printf("IR LED ON - Measured Voltage: %.2f V\n", voltage_on);
-    nrf_delay_ms(10000);
+    printf("temp: %f\n", read_temp_C());
 
-    // // Turn IR LED OFF
-    ir_led_off();
-    nrf_delay_ms(100);
-
-    // // Read voltage at P1 again
-    float voltage_off = read_voltage();
-    printf("IR LED OFF - Measured Voltage: %.2f V\n", voltage_off);
-    nrf_delay_ms(10000);
-
-    // printf("Capacitive Touch Active: %d\n", capacitive_touch_is_active());
-
-    // nrf_delay_ms(10000);
-    // printf("%d\n", capacitive_touch_is_active());
+    
+    if(capacitive_touch_is_active() == 1) {
+      printf("capacitive touch is active\n");
+      // play a sound
+      nrf_delay_ms(1000);
+    }
   }
 }

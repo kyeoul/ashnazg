@@ -69,9 +69,6 @@ static void start_capacitive_test(void) {
 static void loop(void *__unused) {
   disable_interrupts();
 
-  // nrfx_timer_clear(&TIMER5);
-  // nrfx_timer_resume(&TIMER5);
-
   start_capacitive_test();
 }
 
@@ -89,30 +86,17 @@ void capacitive_touch_init(void) {
     .p_context = NULL
   };
 
-  // nrfx_timer_config_t timer_config2 = {
-  //   .frequency = NRF_TIMER_FREQ_1MHz,
-  //   .mode = NRF_TIMER_MODE_TIMER,
-  //   .bit_width = NRF_TIMER_BIT_WIDTH_32,
-  //   .interrupt_priority = 4,
-  //   .p_context = NULL
-  // };
-
   nrfx_timer_init(&TIMER4, &timer_config, timer_handler);
-  // nrfx_timer_init(&TIMER5, &timer_config2, loop);
 
   // enable, but pause the timer
   nrfx_timer_enable(&TIMER4);
   nrfx_timer_pause(&TIMER4);
-
-  // nrfx_timer_enable(&TIMER5);
-  // nrfx_timer_resume(&TIMER5);
 
   app_timer_create(&cap_timer, APP_TIMER_MODE_REPEATED, loop);
 
   app_timer_start(cap_timer, 100000, NULL);
 
   nrfx_timer_compare(&TIMER4, NRF_TIMER_CC_CHANNEL1, 300, true);
-  // nrfx_timer_compare(&TIMER5, NRF_TIMER_CC_CHANNEL1, 100000, true);
 
   // start the touch test
   start_capacitive_test();
