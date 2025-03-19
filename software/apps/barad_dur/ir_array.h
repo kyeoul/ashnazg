@@ -46,3 +46,5 @@ bool pixel_interrupt_set(uint8_t pixel);
 void clear_interrupt_flag();
 
 void print_temp_array();
+
+float get_average_temperature();

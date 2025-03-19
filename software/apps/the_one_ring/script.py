@@ -2,7 +2,7 @@ import struct
 import os
 
 raw_files = []
-raw_file_paths = ['cannothide.raw', 'ashnazg.raw']
+raw_file_paths = ['cannothide.raw', 'ashnazg.raw','lebron_go_other_way.raw', 'lebron_keep_walking.raw', 'lebron_ring_command.raw', 'lering.raw', 'lering_activated.raw']
 output_file_path = 'pcm_data.c'
 
 # Read the raw PCM data

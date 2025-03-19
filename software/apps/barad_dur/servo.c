@@ -4,6 +4,7 @@
 
 #include "servo.h"
 #include "pwm.h"
+#include "ir_array.h"
 
 APP_TIMER_DEF(servo_timer);
 APP_TIMER_DEF(pause_timer);
@@ -28,7 +29,6 @@ static void gpio_init() {
 }
 
 static void timer_handler() {
-  printf("I AM BEING CALLED\n");
   servo_rotate();
 }
 
@@ -58,7 +58,12 @@ void servo_write(float angle) {
 }
 
 void servo_rotate() {
-  printf("%d %d\n", servo_state, current_angle);
+  float temperature = get_average_temperature();
+
+  if (temperature >= 30) {
+    return;
+  }
+
   switch (servo_state) {
     case SERVO_STATE_IDLE:
       servo_write(0);
@@ -77,7 +82,7 @@ void servo_rotate() {
       break;
 
     case SERVO_STATE_PAUSE_AT_180:
-    servo_write(180);
+      servo_write(180);
       break;
     
     case SERVO_STATE_ROTATE_TO_0:
