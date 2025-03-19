@@ -8,7 +8,7 @@
 
 #include "distance_sensor.h"
 
-static nrfx_timer_t DISTANCE_TIMER = NRFX_TIMER_INSTANCE(2);
+static nrfx_timer_t DISTANCE_TIMER = NRFX_TIMER_INSTANCE(1);
 
 static void timer_handler(nrf_timer_event_t event, void* context) {
   printf("hi lol\n");
@@ -44,7 +44,7 @@ float distance_measure_blocking(){
   while(read_echo_output() == 1);
 
   nrfx_timer_pause(&DISTANCE_TIMER);
-  uint32_t count = nrfx_timer_capture(&DISTANCE_TIMER, NRF_TIMER_CC_CHANNEL0);
+  uint32_t count = nrfx_timer_capture(&DISTANCE_TIMER, NRF_TIMER_CC_CHANNEL1);
   printf("wow the echo turned low\n");
   printf("count: %ld\n", count);
 

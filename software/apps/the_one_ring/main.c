@@ -23,7 +23,7 @@
 
 #define VOLTAGE_MEASURE_CHANNEL NRF_SAADC_INPUT_AIN1
 APP_TIMER_DEF(distance_timer);
-// APP_TIMER_DEF(sample_timer);
+APP_TIMER_DEF(sample_timer);
 
 // Global variables
 NRF_TWI_MNGR_DEF(twi_mngr_instance, 1, 0);
@@ -92,7 +92,6 @@ static void sample_timer_callback(void *__unused)
 
 int main(void)
 {
-
   distance_sensor_init();
   // Initialize I2C peripheral and driver
   nrf_drv_twi_config_t i2c_config = NRF_DRV_TWI_DEFAULT_CONFIG;
@@ -102,33 +101,34 @@ int main(void)
   i2c_config.interrupt_priority = 0;
   nrf_twi_mngr_init(&twi_mngr_instance, &i2c_config);
 
-  distance_sensor_init();
+  // distance_sensor_init();
 
   // // initialize i2c client
   i2c_init(&twi_mngr_instance);
 
-  app_timer_init();
+  // app_timer_init();
   pwm_init();
 
-  servo_init();
+  // servo_init();
 
   // servo_write(50);
 
-  speaker_play(CANNOT_HIDE);
+  // speaker_play(CANNOT_HIDE);
 
   // // initialize app timers
   nrfx_gpiote_init();
+
   app_timer_init();
   app_timer_create(&sample_timer, APP_TIMER_MODE_REPEATED, sample_timer_callback);
   app_timer_create(&distance_timer, APP_TIMER_MODE_REPEATED, distance_timer_callback);
 
-  // // // start timer
-  // // // change the rate to whatever you want
+  // start timer
+  // change the rate to whatever you want
   // app_timer_start(sample_timer, 32768, NULL);
   // app_timer_start(distance_timer, 163840, NULL);
 
   printf("sup lol\n");
-  capacitive_touch_init();
+  // capacitive_touch_init();
   ir_led_init();
   adc_init();
   while (1)
@@ -136,26 +136,28 @@ int main(void)
     // servo_rotate();
     nrf_delay_ms(100);
 
-    print_temp_array();
+    // print_temp_array();
     // Turn IR LED ON
-    // ir_led_on();
-    // nrf_delay_ms(500);
+    ir_led_on();
+    nrf_delay_ms(100);
 
     // // Read voltage at P1
-    // float voltage_on = read_voltage();
-    // printf("IR LED ON - Measured Voltage: %.2f V\n", voltage_on);
+    float voltage_on = read_voltage();
+    printf("IR LED ON - Measured Voltage: %.2f V\n", voltage_on);
+    nrf_delay_ms(10000);
 
     // // Turn IR LED OFF
-    // ir_led_off();
-    // nrf_delay_ms(500);
+    ir_led_off();
+    nrf_delay_ms(100);
 
     // // Read voltage at P1 again
-    // float voltage_off = read_voltage();
-    // printf("IR LED OFF - Measured Voltage: %.2f V\n", voltage_off);
+    float voltage_off = read_voltage();
+    printf("IR LED OFF - Measured Voltage: %.2f V\n", voltage_off);
+    nrf_delay_ms(10000);
 
-    // // printf("Capacitive Touch Active: %d\n", capacitive_touch_is_active());
+    // printf("Capacitive Touch Active: %d\n", capacitive_touch_is_active());
 
-    // nrf_delay_ms(1000);
+    // nrf_delay_ms(10000);
     // printf("%d\n", capacitive_touch_is_active());
   }
 }
